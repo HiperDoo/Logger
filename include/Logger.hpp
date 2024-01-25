@@ -4,11 +4,23 @@
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 
-namespace cmd {
-    #define LOG_BUFFER_SIZE 32U
-    extern char log_buffer[LOG_BUFFER_SIZE];
+#define APPLY_COLORS
 
+namespace cmd {
+    #define LOG_BUFFER_SIZE 64U
+
+    #ifdef APPLY_COLORS
+    // C=color | R=reset_color                 >C[00:00:00]R C[------]R C#####:R <
+    constexpr uint32_t START_TEXT_COLOR_SIZE = (19U + 4U) + (19U + 4U) + (19U + 4U);
+    constexpr uint32_t START_TEXT_SIZE = sizeof("[00:00:00] [------] #####: ") + START_TEXT_COLOR_SIZE - 1U;
+    constexpr uint32_t START_TEXT_OFFSET = LOG_BUFFER_SIZE - START_TEXT_SIZE - 2;
+
+    extern char log_buffer[LOG_BUFFER_SIZE + START_TEXT_COLOR_SIZE];
+    #else
+    #define LOG_BUFFER_SIZE 64U
     constexpr size_t offset_msg{sizeof("[00:00:00] [------] #####: ") - 1};
+    extern char log_buffer[LOG_BUFFER_SIZE];
+    #endif
 
     namespace labels {
         constexpr char side[3][7] = { "Server", "Client", "OpenGL" };
@@ -25,9 +37,9 @@ namespace cmd {
     enum msg_side { server, client, opengl };
     enum msg_type { info, warn, error, debug };
 
-    template <typename... T>
-    void console_print(const msg_side arg1, const msg_type arg2, fmt::format_string<T...> format, T&&... args) {
-        auto [_, s1] = fmt::format_to_n(
+    /*template <typename T, typename... Args>
+    void console_print(const msg_side arg1, const msg_type arg2, fmt::format_string<T, Args...> format, T&& t, Args... args) {
+        fmt::format_to_n(
             log_buffer,
             offset_msg,
             "[{:%T}] [{}] {}: ",
@@ -35,13 +47,16 @@ namespace cmd {
             labels::side[arg1],
             labels::type[arg2]
         );
-        auto [out, s2] = fmt::format_to_n(
-            log_buffer + s1,
+        auto [out, _] = fmt::format_to_n(
+            log_buffer + offset_msg,
             LOG_BUFFER_SIZE - offset_msg - 2,
             format,
-            std::forward<T>(args)...
+            std::forward<T>(t), std::forward<Args>(args)...
         );
         *out = '\n'; *(out+1)  = '\0';
+
         fmt::print("{}", log_buffer);
-    }
+    }*/
+
+    void console_print(const msg_side arg1, const msg_type arg2, const char* msg);
 };
