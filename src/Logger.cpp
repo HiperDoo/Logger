@@ -1,34 +1,35 @@
 #include "Logger.hpp"
 
 namespace cmd {
-    char log_buffer[LOG_BUFFER_SIZE + START_TEXT_COLOR_SIZE];
+    #ifdef APPLY_COLORS
+    char log_buffer[LOG_BUFFER_SIZE + START_TEXT_SIZE] =
+        "\033[38;2;112;128;144m[##:##:##] " // rgb(112,128,144) | slate_gray
+        "\033[38;2;###########m[------] "
+        "\033[38;2;###########m-----"
+        "\033[0m: ";
+    #else
+    char log_buffer[LOG_BUFFER_SIZE + START_TEXT_SIZE];
+    #endif
 
-    void console_print(const msg_side arg1, const msg_type arg2, const char* msg) {
+    void console_print(const Calling_From from, const Message_Level level, const char* msg) {
+        time_t now{time(nullptr)};
+
         #ifdef APPLY_COLORS
-        fmt::format_to_n(
-            log_buffer,
-            START_TEXT_SIZE,
-            "{} {} {}: ",
-            fmt::format(fg(fmt::color::slate_gray), "[{:%T}]", fmt::localtime(std::time(nullptr))),
-            fmt::format(fg(labels::side_c[arg1]), "[{}]", labels::side[arg1]),
-            fmt::format(fg(labels::type_c[arg2]), "{}", labels::type[arg2])
-        );
+        strftime(log_buffer + 20U, 9U, "%H:%M:%S", localtime(&now));
+        *(log_buffer + 28U) = ']';
+        memcpy(log_buffer + 37U, color_from[from], 11U);
+        memcpy(log_buffer + 50U, txt_from[from], 6U);
+        memcpy(log_buffer + 65U, color_level[level], 11U);
+        memcpy(log_buffer + 77U, txt_level[level], 5U);
         #else
-        fmt::format_to_n(
-            log_buffer,
-            offset_msg,
-            "[{:%T}] [{}] {}: ",
-            fmt::localtime(std::time(nullptr)),
-            labels::side[arg1],
-            labels::type[arg2]
-        );
+        strftime(log_buffer, 12U, "[%H:%M:%S]", localtime(&now));
+        sprintf(log_buffer + 10U, " [%s] %s: ", txt_from[from], txt_level[level]);
         #endif
 
-        const size_t length = strnlen(msg, START_TEXT_OFFSET);
+        const size_t length = strnlen(msg, LOG_BUFFER_SIZE - 1);
         strncpy(log_buffer + START_TEXT_SIZE, msg, length);
-        char* ptr = &log_buffer[length + START_TEXT_SIZE];
-        *ptr = '\n'; *(ptr+1) = '\0';
+        log_buffer[length + START_TEXT_SIZE] = '\n';
 
-        fmt::print("{}", log_buffer);
+        fwrite(log_buffer, 1U, START_TEXT_SIZE + length + 1U, stdout);
     }
 };

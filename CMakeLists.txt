@@ -57,7 +57,6 @@ SET(LIB_FLAGS
     #${CMAKE_SOURCE_DIR}/dep/raylib/build/raylib/libraylib.a        # Raylib
     #${CMAKE_SOURCE_DIR}/dep/glfw/build/src/libglfw3.a              # GLFW
     #${CMAKE_SOURCE_DIR}/dep/glew/build/lib/libglew.a               # GLEW
-    ${CMAKE_SOURCE_DIR}/dep/fmt/build/libfmt.a                     # FMT
 )
 
 # === Directorios donde se encuentran los encabezados de las librerías
@@ -67,7 +66,6 @@ SET(HEADER_FILES ${CMAKE_SOURCE_DIR}/dep
     #${CMAKE_SOURCE_DIR}/dep/glfw/include       # GLFW
     #${CMAKE_SOURCE_DIR}/dep/glew/include       # GLEW
     #${CMAKE_SOURCE_DIR}/dep/glm                # GLM
-    ${CMAKE_SOURCE_DIR}/dep/fmt/include        # FMT
     #${CMAKE_SOURCE_DIR}/dep/imgui               # IMGUI
     #${CMAKE_SOURCE_DIR}/dep/imgui/backends      # IMGUI
 )

@@ -1,62 +1,64 @@
 #pragma once
-
-#include <fmt/core.h>
-#include <fmt/color.h>
-#include <fmt/chrono.h>
+#include <cinttypes>
+#include <string.h>
+#include <locale.h>
+#include <time.h>
 
 #define APPLY_COLORS
 
 namespace cmd {
-    #define LOG_BUFFER_SIZE 64U
+    #define LOG_BUFFER_SIZE 64
 
     #ifdef APPLY_COLORS
-    // C=color | R=reset_color                 >C[00:00:00]R C[------]R C#####:R <
-    constexpr uint32_t START_TEXT_COLOR_SIZE = (19U + 4U) + (19U + 4U) + (19U + 4U);
-    constexpr uint32_t START_TEXT_SIZE = sizeof("[00:00:00] [------] #####: ") + START_TEXT_COLOR_SIZE - 1U;
-    constexpr uint32_t START_TEXT_OFFSET = LOG_BUFFER_SIZE - START_TEXT_SIZE - 2;
+    static constexpr char color_from[3][11] = {
+        { 48, 51, 53, 59, 50, 48, 57, 59, 49, 51, 57 }, // rgb(35, 209, 139) | green
+        { 48, 56, 53, 59, 48, 56, 53, 59, 50, 53, 53 }, // rgb(85, 85, 255)  | blue
+        { 48, 56, 57, 59, 48, 48, 50, 59, 48, 56, 55 }  // rgb(89, 2, 87)    | light_red
+    };
+    static constexpr char color_level[4][11] = {
+        { 48, 51, 54, 59, 49, 49, 52, 59, 50, 48, 48 }, // rgb(36, 114, 200) | cyan
+        { 50, 53, 53, 59, 50, 49, 53, 59, 48, 54, 56 }, // rgb(255, 215, 68) | gold
+        { 50, 53, 53, 59, 48, 56, 53, 59, 48, 56, 53 }, // rgb(255, 85, 85)  | red
+        { 50, 53, 50, 59, 49, 55, 48, 59, 48, 49, 57 }  // rgb(252, 170, 19) | orange
+    };
 
-    extern char log_buffer[LOG_BUFFER_SIZE + START_TEXT_COLOR_SIZE];
+    // La aplicacion de color requiere de 19 bytes y su reseteo 4 bytes.
+    static constexpr uint32_t START_TEXT_COLOR_SIZE = 19U + 19U + 19U + 4U;
+    static constexpr uint32_t START_TEXT_SIZE = sizeof("[--:--:--] [------] -----: ") + START_TEXT_COLOR_SIZE - 1U;
     #else
-    #define LOG_BUFFER_SIZE 64U
-    constexpr size_t offset_msg{sizeof("[00:00:00] [------] #####: ") - 1};
-    extern char log_buffer[LOG_BUFFER_SIZE];
+    static constexpr uint32_t START_TEXT_SIZE = sizeof("[00:00:00] [------] #####: ") - 1U;
     #endif
 
-    namespace labels {
-        constexpr char side[3][7] = { "Server", "Client", "OpenGL" };
-        constexpr char type[4][6] = { "INFO ", "WARN ", "ERROR", "DEBUG" };
+    extern char log_buffer[LOG_BUFFER_SIZE + START_TEXT_SIZE];
+
+    static constexpr char txt_from[3][7] = { "Server", "Client", "OpenGL" };
+    static constexpr char txt_level[4][6] = { "INFO ", "WARN ", "ERROR", "DEBUG" };
+
+    enum Calling_From { server, client, opengl };
+    enum Message_Level { info, warn, error, debug };
+
+    void console_print(const Calling_From from, const Message_Level level, const char* msg);
+
+    template <typename T, typename... Args>
+    void console_print(const Calling_From from, const Message_Level level, const char* msg, T&& t, Args... args) {
+        time_t now{time(nullptr)};
+
         #ifdef APPLY_COLORS
-        constexpr fmt::rgb side_c[3] = {
-            {35, 209, 139}, {85, 85, 255}, {89, 2, 87}
-        };
-        constexpr fmt::rgb type_c[4] = {
-            {36, 114, 200}, {255, 215, 68}, {255, 85, 85}, {252, 170, 19}
-        };
+        strftime(log_buffer + 20U, 9U, "%H:%M:%S", localtime(&now));
+        *(log_buffer + 28U) = ']';
+        memcpy(log_buffer + 37U, color_from[from], 11U);
+        memcpy(log_buffer + 50U, txt_from[from], 6U);
+        memcpy(log_buffer + 65U, color_level[level], 11U);
+        memcpy(log_buffer + 77U, txt_level[level], 5U);
+        #else
+        strftime(log_buffer, 12U, "[%H:%M:%S]", localtime(&now));
+        sprintf(log_buffer + 10U, " [%s] %s: ", txt_from[from], txt_level[level]);
         #endif
-    };
-    enum msg_side { server, client, opengl };
-    enum msg_type { info, warn, error, debug };
 
-    /*template <typename T, typename... Args>
-    void console_print(const msg_side arg1, const msg_type arg2, fmt::format_string<T, Args...> format, T&& t, Args... args) {
-        fmt::format_to_n(
-            log_buffer,
-            offset_msg,
-            "[{:%T}] [{}] {}: ",
-            fmt::localtime(std::time(nullptr)),
-            labels::side[arg1],
-            labels::type[arg2]
-        );
-        auto [out, _] = fmt::format_to_n(
-            log_buffer + offset_msg,
-            LOG_BUFFER_SIZE - offset_msg - 2,
-            format,
-            std::forward<T>(t), std::forward<Args>(args)...
-        );
-        *out = '\n'; *(out+1)  = '\0';
+        uint32_t length = (uint32_t)snprintf(log_buffer + START_TEXT_SIZE, LOG_BUFFER_SIZE, msg, t, args...);
+        length = ((length < LOG_BUFFER_SIZE - 1) ? length : LOG_BUFFER_SIZE - 1) + START_TEXT_SIZE;
+        log_buffer[length] = '\n';
 
-        fmt::print("{}", log_buffer);
-    }*/
-
-    void console_print(const msg_side arg1, const msg_type arg2, const char* msg);
+        fwrite(log_buffer, 1U, length + 1U, stdout);
+    }
 };
