@@ -6,7 +6,7 @@ namespace cmd {
         "\033[38;2;112;128;144m[##:##:##] " // rgb(112,128,144) | slate_gray
         "\033[38;2;###########m[------] "
         "\033[38;2;###########m-----"
-        "\033[0m: ";
+        "\033[0m: ";                        // reset_color
     #else
     char log_buffer[LOG_BUFFER_SIZE + START_TEXT_SIZE];
     #endif

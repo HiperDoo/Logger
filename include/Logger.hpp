@@ -6,6 +6,9 @@
 
 #define APPLY_COLORS
 
+enum Calling_From { server, client, opengl };
+enum Message_Level { info, warn, error, debug };
+
 namespace cmd {
     #define LOG_BUFFER_SIZE 64
 
@@ -33,9 +36,6 @@ namespace cmd {
 
     static constexpr char txt_from[3][7] = { "Server", "Client", "OpenGL" };
     static constexpr char txt_level[4][6] = { "INFO ", "WARN ", "ERROR", "DEBUG" };
-
-    enum Calling_From { server, client, opengl };
-    enum Message_Level { info, warn, error, debug };
 
     void console_print(const Calling_From from, const Message_Level level, const char* msg);
 
