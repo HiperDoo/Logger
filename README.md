@@ -12,8 +12,8 @@ de mensaje y estado ya que este se adapta meramente a mis necesidades (además d
 números hardcoded). Pero, será tarea sencilla modificar y adaptar el código según tus necesidades.
 </p>
 
-![image](https://github.com/HiperDoo/Logger/assets/47906376/a1d32f29-a59d-4ad6-a74d-5c989ba99744)
-![image](https://github.com/HiperDoo/Logger/assets/47906376/fed2d6ec-3ad6-4db1-b26e-3fe309037087)
+![image](https://github.com/HiperDoo/Logger/assets/47906376/5f7679f3-170e-4032-ac32-b7ec4b75c17e)
+![image](https://github.com/HiperDoo/Logger/assets/47906376/728d38e6-4b5d-48b9-944c-9f967303b5c5)
 
 Para compilar correctamente este repositorio, diríjase al directorio donde desee hacer la instalación dentro de una Terminal/CMD usando los comandos `cd /tu/directorio`. Una vez dentro del directorio, ejecute la siguiente serie de comandos:
 ```bash
